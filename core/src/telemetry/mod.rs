@@ -66,7 +66,8 @@ pub struct TelemetryInstance {
 }
 
 impl TelemetryInstance {
-    fn new(
+    /// Create a [`TelemetryInstance`].
+    pub fn new(
         trace_subscriber: Arc<dyn Subscriber + Send + Sync>,
         logs_out: Option<Mutex<CoreLogsOut>>,
         metric_prefix: &'static str,

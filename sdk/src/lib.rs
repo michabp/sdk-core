@@ -63,7 +63,7 @@ use crate::{
     workflow_context::{ChildWfCommon, PendingChildWorkflow},
 };
 use anyhow::{anyhow, bail, Context};
-use app_data::AppData;
+pub use app_data::AppData;
 use futures::{future::BoxFuture, FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 use serde::Serialize;
 use std::{
@@ -126,9 +126,12 @@ pub fn sdk_client_options(url: impl Into<Url>) -> ClientOptionsBuilder {
 /// and activity tasks by using [ActivityFunction]s
 pub struct Worker {
     common: CommonWorker,
-    workflow_half: WorkflowHalf,
-    activity_half: ActivityHalf,
-    app_data: Option<AppData>,
+    /// Workflows
+    pub workflow_half: WorkflowHalf,
+    /// Activites
+    pub activity_half: ActivityHalf,
+    /// App data
+    pub app_data: Option<AppData>,
 }
 
 struct CommonWorker {
@@ -137,11 +140,13 @@ struct CommonWorker {
     worker_interceptor: Option<Box<dyn WorkerInterceptor>>,
 }
 
-struct WorkflowHalf {
+/// Workflows
+#[derive(Default)]
+pub struct WorkflowHalf {
     /// Maps run id to cached workflow state
     workflows: RefCell<HashMap<String, WorkflowData>>,
     /// Maps workflow type to the function for executing workflow runs with that ID
-    workflow_fns: RefCell<HashMap<String, WorkflowFunction>>,
+    pub workflow_fns: RefCell<HashMap<String, WorkflowFunction>>,
 }
 struct WorkflowData {
     /// Channel used to send the workflow activations
@@ -153,9 +158,11 @@ struct WorkflowFutureHandle<F: Future<Output = Result<WorkflowResult<Payload>, J
     run_id: String,
 }
 
-struct ActivityHalf {
+/// Activities
+#[derive(Default)]
+pub struct ActivityHalf {
     /// Maps activity type to the function for executing activities of that type
-    activity_fns: HashMap<String, ActivityFunction>,
+    pub activity_fns: HashMap<String, ActivityFunction>,
     task_tokens_to_cancels: HashMap<TaskToken, CancellationToken>,
 }
 
@@ -791,6 +798,12 @@ type BoxActFn = Arc<
 #[derive(Clone)]
 pub struct ActivityFunction {
     act_func: BoxActFn,
+}
+
+impl From<BoxActFn> for ActivityFunction {
+    fn from(act_func: BoxActFn) -> Self {
+        Self { act_func }
+    }
 }
 
 /// Return this error to indicate your activity is cancelling
